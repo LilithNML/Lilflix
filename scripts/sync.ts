@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { catalog } from '../src/content/catalog';
 import { assertValidCatalog } from '../src/content/validate';
+import { htmlToText } from '../src/content/sanitize';
 import type { MediaMeta, MediaMetaMap } from '../src/types';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -25,36 +26,7 @@ type AniListMedia = {
   studios: { nodes: { name: string }[] };
 };
 
-function decodeEntities(value: string): string {
-  const named: Record<string, string> = {
-    amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
-    hellip: '…', ndash: '–', mdash: '—', laquo: '«', raquo: '»',
-  };
-  return value
-    .replace(/&#(x[0-9a-f]+|[0-9]+);/gi, (_, raw: string) => {
-      const code = raw.toLowerCase().startsWith('x') ? parseInt(raw.slice(1), 16) : Number(raw);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : '';
-    })
-    .replace(/&([a-z]+);/gi, (_, name: string) => named[name.toLowerCase()] ?? `&${name};`);
-}
-
-export function htmlToText(html: string | null | undefined): string {
-  if (!html) return '';
-  return decodeEntities(
-    html
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<\/p\s*>/gi, '\n')
-      .replace(/<[^>]*>/g, '')
-      .replace(/[ \t]+/g, ' ')
-      .replace(/ *\n */g, '\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim(),
-  );
-}
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function queryAniList(ids: number[]): Promise<AniListMedia[]> {
   const query = `query($ids: [Int]) {
@@ -84,7 +56,8 @@ async function queryAniList(ids: number[]): Promise<AniListMedia[]> {
 
     if (response.status === 429 && attempt < MAX_RETRIES) {
       const retryAfter = Number(response.headers.get('retry-after') ?? '0');
-      await sleep((Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 2 ** attempt) * 1000);
+      const seconds = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 2 ** attempt;
+      await sleep(seconds * 1000);
       continue;
     }
 
@@ -115,10 +88,10 @@ function normalize(media: AniListMedia): MediaMeta {
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  return {
-    refresh: args.includes('--refresh'),
-    id: args.includes('--id') ? Number(args[args.indexOf('--id') + 1]) : undefined,
-  };
+  const idIndex = args.indexOf('--id');
+  const id = idIndex >= 0 ? Number(args[idIndex + 1]) : undefined;
+  if (idIndex >= 0 && (!Number.isInteger(id) || id! <= 0)) throw new Error('--id requiere un entero positivo.');
+  return { refresh: args.includes('--refresh'), id };
 }
 
 async function loadExisting(): Promise<MediaMetaMap> {
@@ -129,7 +102,7 @@ async function loadExisting(): Promise<MediaMetaMap> {
   }
 }
 
-async function main() {
+export async function syncCatalog() {
   assertValidCatalog(catalog);
   const { refresh, id } = parseArgs();
   const existing = await loadExisting();
@@ -155,7 +128,9 @@ async function main() {
   console.log(`Sync: ${found.length} metadatos guardados en ${OUTPUT}.`);
 }
 
-main().catch(error => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exitCode = 1;
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+  syncCatalog().catch(error => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  });
+}
