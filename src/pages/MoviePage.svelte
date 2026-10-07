@@ -8,6 +8,13 @@
   const title = getById(id) as Movie | undefined;
   $: progress = title ? get(title.id) : undefined;
   $: continuation = title ? nextToWatch(title, progress) : undefined;
+
+  function formatDuration(minutes: number | null): string {
+    if (!minutes) return 'Duración desconocida';
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return hours ? `${hours} h ${mins} min` : `${mins} min`;
+  }
 </script>
 
 {#if !title}
@@ -25,15 +32,6 @@
     </section>
   </main>
 {/if}
-
-<script lang="ts">
-  function formatDuration(minutes: number | null): string {
-    if (!minutes) return 'Duración desconocida';
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours ? `${hours} h ${mins} min` : `${mins} min`;
-  }
-</script>
 
 <style>
   .detail { min-height: 100dvh; padding-bottom: 56px; }
