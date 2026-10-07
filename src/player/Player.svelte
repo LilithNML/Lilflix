@@ -3,7 +3,7 @@
   import { get, save } from '../services/progress';
   import { href } from '../app/router';
   import type { Title } from '../types';
-  import { toEmbedUrl } from './host';
+  import { toEmbedUrl } from './host.ts';
 
   export let title: Title;
   export let video: string;
