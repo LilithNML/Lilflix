@@ -73,3 +73,17 @@ describe('htmlToText', () => {
     expect(htmlToText(null)).toBe('');
   });
 });
+
+
+describe('anonmp4 host adapter', () => {
+  it('converts an anonmp4 direct link into the host embed URL', async () => {
+    const { toEmbedUrl } = await import('../src/player/host');
+    expect(toEmbedUrl('https://anonmp4.art/v/ggRRfGVo2cDnLUg'))
+      .toBe('https://anonmp4.art/embed/ggRRfGVo2cDnLUg');
+  });
+
+  it('rejects unrelated video hosts', async () => {
+    const { toEmbedUrl } = await import('../src/player/host');
+    expect(() => toEmbedUrl('https://example.com/video.mp4')).toThrow();
+  });
+});
