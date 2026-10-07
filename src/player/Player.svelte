@@ -159,6 +159,11 @@
       activeSeason = next.s;
       activeEpisode = next.ep;
       activeVideo = nextEpisode.video;
+      if (title.kind === 'series') {
+        const all = title.seasons.flatMap(item => item.episodes.map(e => ({ s: item.number, ep: e.number })));
+        const index = all.findIndex(item => item.s === activeSeason && item.ep === activeEpisode);
+        next = all[index + 1];
+      }
       resumeApplied = false;
       currentTime = 0;
       duration = 0;
