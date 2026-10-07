@@ -76,15 +76,16 @@
 }} />
 
 <div class="player">
-  <iframe
-    key={iframeKey}
-    src={toEmbedUrl(activeVideo)}
-    title={title.displayTitle}
-    allow="autoplay; fullscreen; picture-in-picture"
-    allowfullscreen
-    frameborder="0"
-    referrerpolicy="no-referrer"
-  ></iframe>
+  {#key iframeKey}
+    <iframe
+      src={toEmbedUrl(activeVideo)}
+      title={title.displayTitle}
+      allow="autoplay; fullscreen; picture-in-picture"
+      allowfullscreen
+      frameborder="0"
+      referrerpolicy="no-referrer"
+    ></iframe>
+  {/key}
 
   <header class="top">
     <a href={backHref} aria-label="Volver">←</a>
