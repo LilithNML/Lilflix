@@ -1,11 +1,14 @@
 <script lang="ts">
   import type { Title } from '../types';
   import { href } from '../app/router';
+  import { nextToWatch, get } from '../services/progress';
 
   export let title: Title;
+  $: progress = get(title.id);
+  $: continuation = nextToWatch(title, progress);
   $: watchHref = title.kind === 'series'
-    ? href({ name: 'series', id: title.id })
-    : href({ name: 'movie', id: title.id });
+    ? href({ name: 'watch-series', id: title.id, season: continuation.s, episode: continuation.ep })
+    : href({ name: 'watch-movie', id: title.id });
 </script>
 
 <section class="hero" style={title.meta.banner ? `background-image: linear-gradient(90deg, rgba(12,11,10,.96) 0%, rgba(12,11,10,.68) 45%, rgba(12,11,10,.08) 100%), url("${title.meta.banner}")` : undefined}>
@@ -14,7 +17,7 @@
     <h1>{title.displayTitle}</h1>
     <p class="meta">{title.meta.year ?? 'Año desconocido'} · {title.kind === 'series' ? (title.meta.format ?? 'Serie') : 'Película'}{title.meta.score ? ` · ★ ${title.meta.score}` : ''}</p>
     <p class="description">{title.meta.description || 'Sin sinopsis disponible.'}</p>
-    <a class="primary" href={watchHref}>{title.kind === 'series' ? 'Reproducir' : 'Reproducir'}</a>
+    <a class="primary" href={watchHref}>{continuation && progress ? 'Continuar' : 'Reproducir'}</a>
   </div>
 </section>
 
