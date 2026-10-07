@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { validateCatalog } from '../src/content/validate';
-import { htmlToText } from '../scripts/sync';
+import { htmlToText } from '../src/content/sanitize';
 import { movie, series } from '../src/content/helpers';
+import { validateCatalog } from '../src/content/validate';
 
 describe('validateCatalog', () => {
   const valid = [
