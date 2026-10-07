@@ -1,0 +1,1 @@
+console.log('TICKET-006 check:catalog aún no está implementado.');
