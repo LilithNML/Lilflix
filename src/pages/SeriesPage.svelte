@@ -11,6 +11,10 @@
   $: season = title?.seasons.find(item => item.number === selectedSeason);
   $: progress = title ? get(title.id) : undefined;
   $: continuation = title ? nextToWatch(title, progress) : undefined;
+
+  function totalEpisodes(value: Series): number {
+    return value.seasons.reduce((sum, item) => sum + item.episodes.length, 0);
+  }
 </script>
 
 {#if !title}
@@ -21,19 +25,16 @@
       <a class="back" href="#/">← Inicio</a>
       <div class="banner-copy"><p class="eyebrow">SERIE</p><h1>{title.displayTitle}</h1><p>{title.meta.year ?? 'Año desconocido'} · {title.meta.format ?? 'Serie'} · {title.meta.episodes ?? totalEpisodes(title)} episodios{title.meta.score ? ` · ★ ${title.meta.score}` : ''}</p></div>
     </header>
-
     <section class="info">
       <p class="description">{title.meta.description || 'Sin sinopsis disponible.'}</p>
       {#if title.meta.genres.length}<div class="chips">{#each title.meta.genres as genre}<span>{genre}</span>{/each}</div>{/if}
       <a class="primary" href={continuation ? href({ name: 'watch-series', id: title.id, season: continuation.s, episode: continuation.ep }) : '#'}>{continuation ? 'Continuar' : 'Reproducir'}</a>
     </section>
-
     {#if title.seasons.length > 1}
       <label class="season-select">Temporada
         <select bind:value={selectedSeason}>{#each title.seasons as item}<option value={item.number}>Temporada {item.number}</option>{/each}</select>
       </label>
     {/if}
-
     {#if season}
       <section class="episodes" aria-label={`Temporada ${season.number}`}>
         <h2>Temporada {season.number}</h2>
@@ -44,12 +45,6 @@
     {/if}
   </main>
 {/if}
-
-<script lang="ts">
-  function totalEpisodes(value: Series): number {
-    return value.seasons.reduce((sum, item) => sum + item.episodes.length, 0);
-  }
-</script>
 
 <style>
   .detail { min-height: 100dvh; padding-bottom: 56px; }
