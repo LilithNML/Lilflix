@@ -1,0 +1,5 @@
+/*
+  Cloudflare Pages: deploy this file as response headers.
+*/
+X-Robots-Tag: noindex
+Referrer-Policy: no-referrer
