@@ -115,7 +115,17 @@ export async function syncCatalog() {
   }
 
   console.log(`Sync: consultando ${ids.length} ID(s) en una petición batch.`);
-  const found = await queryAniList(ids);
+  let found: AniListMedia[];
+  try {
+    found = await queryAniList(ids);
+  } catch (error) {
+    const hasCachedData = ids.every(value => Boolean(existing[value]));
+    if (hasCachedData) {
+      console.warn(`Aviso: AniList no está disponible; se conservan los metadatos cacheados. ${error instanceof Error ? error.message : error}`);
+      return;
+    }
+    throw error;
+  }
   const foundIds = new Set(found.map(item => item.id));
   const missing = ids.filter(value => !foundIds.has(value));
   if (missing.length) throw new Error(`AniList no encontró estos IDs: ${missing.join(', ')}`);
