@@ -1,4 +1,4 @@
-import catalog from '../content/catalog';
+import { catalog } from '../content/catalog';
 import metadata from '../content/generated/media.json';
 import { episodeInputToObject } from '../content/helpers';
 import type { CatalogEntry, Episode, EpisodeInput, MediaMetaMap, Movie, Series, Title } from '../types';
