@@ -1,42 +1,70 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { getById } from '../services/content';
   import { href } from '../app/router';
+  import { nextToWatch } from '../services/progress';
   import type { Movie, Series } from '../types';
 
   export let id: number;
   export let season: number | undefined = undefined;
   export let episode: number | undefined = undefined;
 
-  $: title = getById(id);
-  $: media = title?.kind === 'series'
-    ? (title as Series).seasons.find(item => item.number === season)?.episodes.find(item => item.number === episode)
-    : undefined;
-  $: video = title?.kind === 'movie' ? (title as Movie).video : media?.video;
-  $: backHref = title?.kind === 'series' ? href({ name: 'series', id }) : href({ name: 'movie', id });
+  let Player: any = null;
+  let title = getById(id);
+  let video: string | undefined;
+  let next: { s: number; ep: number } | undefined;
+
+  $: {
+    title = getById(id);
+    if (title?.kind === 'movie') {
+      video = (title as Movie).video;
+      next = undefined;
+    } else if (title?.kind === 'series') {
+      const series = title as Series;
+      const s = season ?? series.seasons[0]?.number ?? 1;
+      const ep = episode ?? series.seasons.find(item => item.number === s)?.episodes[0]?.number ?? 1;
+      video = series.seasons.find(item => item.number === s)?.episodes.find(item => item.number === ep)?.video;
+      const all = series.seasons.flatMap(item => item.episodes.map(e => ({ s: item.number, ep: e.number })));
+      const index = all.findIndex(item => item.s === s && item.ep === ep);
+      next = all[index + 1];
+    } else {
+      video = undefined;
+      next = undefined;
+    }
+  }
+
+  $: backHref = title?.kind === 'series'
+    ? href({ name: 'series', id })
+    : title?.kind === 'movie'
+      ? href({ name: 'movie', id })
+      : '#/';
+
+  onMount(async () => {
+    if (title && video) {
+      const module = await import('../player/Player.svelte');
+      Player = module.default;
+    }
+  });
 </script>
 
-<main class="watch-shell">
-  <header>
-    <a href={backHref} aria-label="Volver">←</a>
-    <strong>{title?.displayTitle ?? 'Reproductor'}</strong>
-  </header>
-
-  <section class="placeholder">
-    {#if !title || !video}
-      <h1>No encontrado</h1>
-      <p>El título o episodio solicitado no existe.</p>
-    {:else}
-      <h1>{title.displayTitle}</h1>
-      <p>El reproductor se implementará en el TICKET-5.</p>
-      {#if title.kind === 'series'}<p>Temporada {season} · Episodio {episode}</p>{/if}
-    {/if}
-  </section>
-</main>
+{#if !title || !video}
+  <main class="not-found"><h1>No encontrado</h1><p>El título o episodio solicitado no existe.</p><a href={backHref}>Volver</a></main>
+{:else if Player}
+  <svelte:component
+    this={Player}
+    {title}
+    {video}
+    season={season ?? 1}
+    episode={episode ?? 1}
+    {next}
+    {backHref}
+  />
+{:else}
+  <main class="loading" aria-live="polite">Cargando reproductor…</main>
+{/if}
 
 <style>
-  .watch-shell { min-height: 100dvh; background: #000; color: var(--text); }
-  header { position: fixed; inset: 0 0 auto; z-index: 2; display: flex; align-items: center; gap: 14px; padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left)); background: linear-gradient(#000, transparent); }
-  header a { width: 44px; height: 44px; display: grid; place-items: center; text-decoration: none; font-size: 1.5rem; }
-  .placeholder { min-height: 100dvh; display: grid; place-content: center; justify-items: center; text-align: center; padding: 80px 24px; }
-  .placeholder p { color: var(--muted); }
+  .not-found, .loading { min-height: 100dvh; display: grid; place-content: center; justify-items: center; text-align: center; padding: 24px; background: #000; }
+  .not-found p { color: var(--muted); }
+  .not-found a { padding: 10px 16px; background: var(--surface); border-radius: var(--radius); text-decoration: none; }
 </style>
