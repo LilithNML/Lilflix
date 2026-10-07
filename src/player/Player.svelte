@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import { get, markWatched, save } from '../services/progress';
-  import { href, navigate } from '../app/router';
-  import type { Episode, Movie, Series, Title } from '../types';
+  import { href } from '../app/router';
+  import type { Title } from '../types';
   import { clampTime, CONTROL_HIDE_MS, formatTime, SEEK_SECONDS, shouldResume } from './controls';
 
   export let title: Title;
@@ -61,19 +61,6 @@
     videoEl.currentTime = clampTime(videoEl.currentTime + delta, videoEl.duration);
     persist();
     showControls();
-  }
-
-  function seekTo(clientX: number) {
-    const rect = (event?.currentTarget as HTMLElement | null)?.getBoundingClientRect();
-    if (!rect || !duration) return;
-    videoEl.currentTime = clampTime(((clientX - rect.left) / rect.width) * duration, duration);
-    persist();
-  }
-
-  function updateFromPointer(event: PointerEvent) {
-    const el = event.currentTarget as HTMLElement;
-    const rect = el.getBoundingClientRect();
-    videoEl.currentTime = clampTime(((event.clientX - rect.left) / rect.width) * duration, duration);
   }
 
   async function toggleFullscreen() {
@@ -254,7 +241,7 @@
   <div class:visible={controlsVisible} class="chrome">
     <header class="top">
       <a href={backHref} aria-label="Volver">←</a>
-      <strong>{title.displayTitle}{title.kind === 'series' ? ` · T${season} E${episode}` : ''}</strong>
+      <strong>{title.displayTitle}{title.kind === 'series' ? ` · T${activeSeason} E${activeEpisode}` : ''}</strong>
     </header>
 
     {#if errorMessage}
