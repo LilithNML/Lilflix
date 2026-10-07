@@ -29,16 +29,19 @@
   let bufferingTimer: ReturnType<typeof setTimeout> | undefined;
   let slowTimer: ReturnType<typeof setTimeout> | undefined;
   let resumeApplied = false;
+  let activeSeason = season;
+  let activeEpisode = episode;
+  let activeVideo = video;
 
   $: progressPercent = duration ? (currentTime / duration) * 100 : 0;
   $: bufferedPercent = duration ? buffered / duration * 100 : 0;
 
   function currentProgress() {
-    return { s: season, ep: episode, t: currentTime, d: duration, u: Date.now(), watched: get(title.id)?.watched ?? [] };
+    return { s: activeSeason, ep: activeEpisode, t: currentTime, d: duration, u: Date.now(), watched: get(title.id)?.watched ?? [] };
   }
 
   function persist(markComplete = false) {
-    if (markComplete) markWatched(title.id, season, episode);
+    if (markComplete) markWatched(title.id, activeSeason, activeEpisode);
     else save(title.id, currentProgress());
   }
 
@@ -108,9 +111,9 @@
 
   function loadSource() {
     resumeApplied = false;
-    resumeTime = get(title.id)?.s === season && get(title.id)?.ep === episode ? (get(title.id)?.t ?? 0) : 0;
+    resumeTime = get(title.id)?.s === activeSeason && get(title.id)?.ep === activeEpisode ? (get(title.id)?.t ?? 0) : 0;
     errorMessage = '';
-    videoEl.src = video;
+    videoEl.src = activeVideo;
     videoEl.load();
   }
 
@@ -150,8 +153,21 @@
 
   function startNext() {
     countdown = 0;
-    if (next) {
-      navigate({ name: 'watch-series', id: title.id, season: next.s, episode: next.ep });
+    if (title.kind === 'series' && next) {
+      const nextEpisode = title.seasons.find(item => item.number === next.s)?.episodes.find(item => item.number === next.ep);
+      if (!nextEpisode) return;
+      activeSeason = next.s;
+      activeEpisode = next.ep;
+      activeVideo = nextEpisode.video;
+      resumeApplied = false;
+      currentTime = 0;
+      duration = 0;
+      buffered = 0;
+      errorMessage = '';
+      videoEl.src = activeVideo;
+      videoEl.load();
+      history.replaceState(null, '', href({ name: 'watch-series', id: title.id, season: activeSeason, episode: activeEpisode }));
+      void videoEl.play().catch(() => undefined);
       return;
     }
     window.location.hash = backHref;
