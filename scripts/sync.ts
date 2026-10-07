@@ -1,0 +1,1 @@
+console.log('TICKET-008 sync aún no está implementado.');
