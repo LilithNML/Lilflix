@@ -253,7 +253,7 @@
         <div class="seek-wrap">
           <div class="buffer" style={`width: ${bufferedPercent}%`}></div>
           <div class="progress" style={`width: ${progressPercent}%`}></div>
-          <input aria-label="Progreso" type="range" min="0" max={duration || 0} step="0.1" value={currentTime} on:pointerdown={() => seeking = true} on:pointerup={() => { seeking = false; persist(); }} on:input={(event) => videoEl.currentTime = Number((event.currentTarget as HTMLInputElement).value} />
+          <input aria-label="Progreso" type="range" min="0" max={duration || 0} step="0.1" value={currentTime} on:pointerdown={() => seeking = true} on:pointerup={() => { seeking = false; persist(); }} on:input={(event) => videoEl.currentTime = Number((event.currentTarget as HTMLInputElement).value)} />
         </div>
         <div class="row">
           <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
