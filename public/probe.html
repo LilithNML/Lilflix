@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lilflix · Turbo.cr probe</title>
+<style>
+:root { color-scheme: dark; font-family: system-ui, sans-serif; }
+body { margin: 0; padding: 24px; background: #0c0b0a; color: #f4efe6; }
+main { max-width: 900px; margin: auto; }
+video { display: block; width: 100%; margin: 16px 0; background: #000; }
+pre { overflow: auto; padding: 12px; background: #171513; white-space: pre-wrap; }
+button { min-height: 44px; padding: 0 16px; }
+</style>
+</head>
+<body>
+<main>
+<h1>Turbo.cr probe</h1>
+<p>Abre esta página con ?url=&lt;URL-encoded&gt; en un origen distinto al del vídeo.</p>
+<video id="video" controls playsinline preload="metadata" referrerpolicy="no-referrer"></video>
+<button id="seek">Probar seek</button>
+<pre id="log"></pre>
+</main>
+<script>
+const params = new URLSearchParams(location.search);
+const source = params.get('url');
+const video = document.querySelector('#video');
+const log = document.querySelector('#log');
+
+function write(event, detail = '') {
+  log.textContent += '[' + new Date().toISOString() + '] ' + event + (detail ? ': ' + detail : '') + '\n';
+}
+
+if (!source) {
+  write('ERROR', 'Falta ?url=<URL del vídeo>');
+} else {
+  try {
+    const parsed = new URL(source);
+    if (parsed.protocol !== 'https:') throw new Error('La URL debe usar https.');
+    video.src = parsed.href;
+    write('src asignado', parsed.href);
+  } catch (error) {
+    write('ERROR', error.message);
+  }
+}
+
+['loadstart', 'loadedmetadata', 'canplay', 'playing', 'pause', 'waiting', 'stalled', 'ended', 'error'].forEach((name) => {
+  video.addEventListener(name, () => {
+    const error = video.error ? ' code=' + video.error.code + ' message=' + video.error.message : '';
+    write(name, 'currentTime=' + video.currentTime + ' duration=' + video.duration + error);
+  });
+});
+
+document.querySelector('#seek').addEventListener('click', () => {
+  if (!Number.isFinite(video.duration) || video.duration <= 1) {
+    write('seek', 'SKIP: duración no disponible');
+    return;
+  }
+  const target = Math.min(video.duration - 0.5, Math.max(0.5, video.duration * 0.5));
+  video.currentTime = target;
+  write('seek solicitado', String(target));
+});
+</script>
+</body>
+</html>
