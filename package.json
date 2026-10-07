@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run sync && vite build",
+    "build": "vite build",
+    "predev": "npm run sync",
+    "prebuild": "npm run sync",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
