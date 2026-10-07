@@ -1,21 +1,19 @@
-import { movie, series } from './helpers';
+import { series } from './helpers';
 import type { CatalogEntry } from '../types';
 
 /**
  * ÚNICO archivo que editas para añadir contenido.
- * Sustituye estas URLs de ejemplo por URLs HTTPS reales de tu proveedor.
+ * Las URLs de vídeo deben ser HTTPS y estar autorizadas para su uso.
  */
 export const catalog: CatalogEntry[] = [
   series({
-    anilistId: 21,
+    anilistId: 196722,
     featured: true,
     episodes: {
-      1: 'https://turbo.cr/replace-with-episode-1.mp4',
-      2: 'https://turbo.cr/replace-with-episode-2.mp4',
+      1: 'https://turbo.cr/embed/5SdgNnMqkdSQ-',
+      2: 'https://turbo.cr/embed/exv4XXWiUMkOz',
+      3: 'https://turbo.cr/embed/OTq1FlnJdH8VA',
+      4: 'https://turbo.cr/embed/IvmNTQoFHPbzK',
     },
-  }),
-  movie({
-    anilistId: 199,
-    video: 'https://turbo.cr/replace-with-movie.mp4',
   }),
 ];
